@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linea Map | Arica en Movimiento</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="mapa.css">
+</head>
+<body>
+    <div id="login-screen">
+        <div class="login-card">
+            <img src="logo.jpg" alt="Logo Linea Map" class="logo-img">
+            <h1>Linea Map</h1>
+            <p>Conecta con tu ciudad. Rutas, paraderos y puntos de reciclaje en Arica.</p>
+            <button onclick="entrar()" class="btn-primary">Entrar a la Ciudad</button>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="mapa.js"></script>
+</body>
+</html>
