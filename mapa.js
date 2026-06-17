@@ -40,7 +40,7 @@ window.toggleSidePanel = function() {
     document.getElementById('side-panel').classList.toggle('active');
 }
 
-// --- 5. TARIFA DINÁMICA ---
+// --- 5. TARIFA DINÁMICA ACTUALIZADA ---
 function obtenerTarifaActual(tarifaDia, tarifaNoche) {
     const horaLocal = new Date().getHours();
     const esNoche = (horaLocal >= 22 || horaLocal < 7);
@@ -55,7 +55,7 @@ function obtenerTarifaActual(tarifaDia, tarifaNoche) {
     }
 }
 
-// --- 6. INICIALIZACIÓN DEL MAPA ---
+// --- 6. INICIALIZACIÓN DEL MAPA EN ARICA ---
 function initMap() {
     const surOeste = L.latLng(-18.55, -70.35);
     const norEste = L.latLng(-18.35, -70.20);
@@ -88,7 +88,7 @@ function initMap() {
     };
 }
 
-// --- 7. DESCARGA DESDE BASE DE DATOS ---
+// --- 7. COHESIÓN Y DESCARGA DESDE FIREBASE ---
 function descargarRutas() {
     db.collection("lineas").get().then((querySnapshot) => {
         lineasAgrupadas = {}; 
@@ -223,7 +223,7 @@ window.cambiarPestana = function(pestana) {
     }
 }
 
-// --- 10. NAVEGACIÓN A HITOS ---
+// --- 10. NAVEGACIÓN A HITOS EXACTOS ---
 window.irADestino = function(lat, lng, nombre) {
     const ubicacion = L.latLng(lat, lng);
     if (destinoMarcadorTemp) map.removeLayer(destinoMarcadorTemp);
@@ -236,7 +236,7 @@ window.irADestino = function(lat, lng, nombre) {
     toggleSidePanel();
 }
 
-// --- 11. BUSCADOR DINÁMICO CON AUTOCOMPLETADO ---
+// --- 11. BUSCADOR DINÁMICO CON AUTOCOMPLETADO (DEBOUNCE) ---
 window.manejarInputBusqueda = function() {
     const query = document.getElementById('panel-search-input').value.trim();
     const cajaSugerencias = document.getElementById('search-suggestions');
