@@ -9,6 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="mapa.css">
     
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-polylinedecorator/dist/leaflet.polylineDecorator.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 </head>
@@ -41,7 +44,6 @@
 
         <div class="panel-body">
             <div id="tab-destinos" class="tab-content active">
-                
                 <div class="search-container">
                     <div class="panel-search-box">
                         <input type="text" id="panel-search-input" placeholder="Buscar dirección o lugar..." autocomplete="off" oninput="manejarInputBusqueda()">
@@ -55,23 +57,18 @@
                     <li onclick="irADestino(-18.4886, -70.2968, 'Universidad de Tarapacá')">
                         <span class="stop-name">UTA</span><span class="dot dot-red"></span>
                     </li>
-                    
                     <li onclick="irADestino(-18.4815, -70.3134, 'Santo Tomás')">
                         <span class="stop-name">SANTO TOMÁS</span><span class="dot dot-magenta"></span>
                     </li>
-                    
                     <li onclick="irADestino(-18.4764, -70.3106, 'Hospital Regional')">
                         <span class="stop-name">HOSP. REGIONAL</span><span class="dot dot-blue"></span>
                     </li>
-                    
                     <li onclick="irADestino(-18.4735, -70.3080, 'Hospital San José')">
                         <span class="stop-name">HOSP. SAN JOSÉ</span><span class="dot dot-orange"></span>
                     </li>
-                    
                     <li onclick="irADestino(-18.4744, -70.3115, 'Mall Plaza')">
                         <span class="stop-name">MALL PLAZA</span><span class="dot dot-green"></span>
                     </li>
-
                     <li onclick="irADestino(-18.4985, -70.2905, 'El Agro')">
                         <span class="stop-name">EL AGRO</span><span class="dot" style="background-color: #f1c40f;"></span>
                     </li>
@@ -86,7 +83,6 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="mapa.js"></script>
 </body>
 </html>

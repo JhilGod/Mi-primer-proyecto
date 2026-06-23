@@ -92,30 +92,23 @@ input:checked + .slider:before { transform: translateX(20px); }
 .user-location-icon::after { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: #107c91; opacity: 0.4; animation: pulse 2s infinite; top: 0; left: 0; }
 @keyframes pulse { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(3); opacity: 0; } }
 
-/* =======================================================
-   MODO OSCURO (Estilo Google Maps)
-   ======================================================= */
+/* --- MODO OSCURO --- */
 body.dark-theme { background-color: #202124; }
 body.dark-theme .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
-
 body.dark-theme #btn-menu, body.dark-theme #btn-theme, body.dark-theme .btn-locate, body.dark-theme #side-panel { background: #303134; color: #e8eaed; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
 body.dark-theme .panel-header { background: #202124; border-bottom: 1px solid #5f6368; }
-body.dark-theme .panel-header h3 { color: #8ab4f8; }
 body.dark-theme .tab.active { background-color: #303134; color: #8ab4f8; border-color: #5f6368; }
 body.dark-theme .tab.inactive { background-color: #202124; color: #9aa0a6; border-color: #444; }
 body.dark-theme .panel-body { background: #303134; }
-
 body.dark-theme .panel-search-box { background: #202124; border-color: #5f6368; }
 body.dark-theme .panel-search-box input { color: #e8eaed; }
 body.dark-theme .panel-search-box button { background: #8ab4f8; color: #202124; }
 body.dark-theme .suggestions-list { background: #202124; border-color: #5f6368; box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
 body.dark-theme .suggestion-item { border-bottom-color: #444; color: #e8eaed; }
 body.dark-theme .suggestion-item:hover { background: #303134; }
-
 body.dark-theme .line-card, body.dark-theme .stop-list li { background: #202124; border: 1px solid #5f6368; }
 body.dark-theme .line-title { color: #e8eaed; border-bottom-color: #5f6368; }
 body.dark-theme .toggle-row, body.dark-theme .stop-name, body.dark-theme .panel-title { color: #bdc1c6; }
-
 body.dark-theme .slider { background-color: #5f6368; }
 body.dark-theme .tarifa-badge.dia { background-color: #3f3616; color: #ffeb8a; border-color: #665b22; }
 body.dark-theme .tarifa-badge.noche { background-color: #1a365d; color: #90cdf4; border-color: #2a4365; }
