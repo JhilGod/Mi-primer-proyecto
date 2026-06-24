@@ -1,358 +1,467 @@
-// --- VARIABLES GLOBALES ---
-let map, baseLayer, userMarker = null, currentLatLng = null;
-let isDarkMode = false;
-let lineasAgrupadas = {}; 
-let destinoMarcadorTemp = null;
-let temporizadorBusqueda = null;
+/**
+ * ian-crystal github
+ */
 
-// --- 1. CONFIGURACIÓN FIREBASE REAL ---
 const firebaseConfig = {
-    apiKey: "AIzaSyDaourUoy1CgLslN9UxO-9DyTz3IjhRVpI",
-    authDomain: "linea-map.firebaseapp.com",
-    projectId: "linea-map",
-    storageBucket: "linea-map.firebasestorage.app",
-    messagingSenderId: "350770978437",
-    appId: "1:350770978437:web:cf2ef2b5e9b4c6a33e13ec",
-    measurementId: "G-LD6E7P550C"
+  apiKey: "api_key", // no expongas tu api key sin configurar
+  authDomain: "linea-map.firebaseapp.com",
+  projectId: "linea-map",
+  storageBucket: "linea-map.firebasestorage.app",
+  messagingSenderId: "messagingSenderId",
+  appId: "appId",
+  measurementId: "measurementId",
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// --- 2. GESTIÓN DE PANTALLAS ---
-window.entrarInvitado = function() {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('map').style.display = 'block';
-    document.getElementById('btn-menu').style.display = 'block';
-    document.getElementById('btn-theme').style.display = 'block';
-    document.querySelector('.btn-locate').style.display = 'flex';
-    initMap();
+// configura tu firebase
+// no permitas injecciones xss
+// verifica logitud de los textos
+// recomiendo cambiarse a una db de verdad, firebase aunque es mas simple tiene capacidades muy limitadas
+
+// el codigo se acortaria mucho si usaran react
+// podrian uar cloudflare para una url estetica
+
+function escapeHtml(text) {
+  if (!text) return "";
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
-// --- 3. MODO OSCURO ---
-window.toggleTheme = function() {
-    isDarkMode = !isDarkMode;
-    document.body.classList.toggle('dark-theme');
-    document.getElementById('btn-theme').innerText = isDarkMode ? '☀️' : '🌙';
-};
-
-// --- 4. PANEL LATERAL ---
-window.toggleSidePanel = function() {
-    document.getElementById('side-panel').classList.toggle('active');
+function isValidColor(color) {
+  return /^#([0-9a-fA-F]{3}){1,2}$/.test(color) || /^[a-zA-Z]+$/.test(color);
 }
 
-// --- 5. TARIFA DINÁMICA ---
-function obtenerTarifaActual(tarifaDia, tarifaNoche) {
-    const horaLocal = new Date().getHours();
-    const esNoche = (horaLocal >= 22 || horaLocal < 7);
-    
-    const precioDia = tarifaDia || "1000";
-    const precioNoche = tarifaNoche || "1300";
+const App = {
+  map: null,
+  baseLayer: null,
+  userMarker: null,
+  currentLatLng: null,
+  isDarkMode: false,
+  lineasAgrupadas: {},
+  destinoMarcadorTemp: null,
+  temporizadorBusqueda: null,
+  mapInitialized: false,
+
+  entrarInvitado() {
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("map").style.display = "block";
+    document.getElementById("btn-menu").style.display = "block";
+    document.getElementById("btn-theme").style.display = "block";
+    document.querySelector(".btn-locate").style.display = "flex";
+    if (!this.mapInitialized) {
+      this.initMap();
+      this.mapInitialized = true;
+    }
+  },
+
+  toggleTheme() {
+    this.isDarkMode = !this.isDarkMode;
+    document.body.classList.toggle("dark-theme");
+    document.getElementById("btn-theme").innerText = this.isDarkMode
+      ? "☀️"
+      : "🌙"; // evitaria emojis por codificacion, usaria svg
+  },
+
+  toggleSidePanel() {
+    document.getElementById("side-panel").classList.toggle("active");
+  },
+
+  obtenerTarifaActual(tarifaDia = 1000, tarifaNoche = 1300) {
+    const hora = new Date().getHours();
+    const esNoche = hora >= 22 || hora < 7;
+    const precioDia = Number(tarifaDia ?? 1000);
+    const precioNoche = Number(tarifaNoche ?? 1300);
 
     if (esNoche) {
-        return `<span class="tarifa-badge noche">🌙 $${precioNoche} (Nocturna)</span>`;
+      return `<span class="tarifa-badge noche">🌙 $${precioNoche} (Nocturna)</span>`;
     } else {
-        return `<span class="tarifa-badge dia">☀️ $${precioDia} (Diurna)</span>`;
+      return `<span class="tarifa-badge dia">☀️ $${precioDia} (Diurna)</span>`;
     }
-}
+  },
 
-// --- 6. INICIALIZACIÓN DEL MAPA ---
-function initMap() {
+  initMap() {
     const surOeste = L.latLng(-18.55, -70.35);
-    const norEste = L.latLng(-18.35, -70.20);
+    const norEste = L.latLng(-18.35, -70.2);
     const limites = L.latLngBounds(surOeste, norEste);
 
-    map = L.map('map', { 
-        center: [-18.4783, -70.3126], 
-        zoom: 14, 
-        minZoom: 13, 
-        maxBounds: limites, 
-        maxBoundsViscosity: 1.0, 
-        zoomControl: false 
-    });
-    
-    baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-
-    descargarRutas();
-
-    const gpsIcon = L.divIcon({ className: 'user-location-icon', iconSize: [18, 18], iconAnchor: [9, 9] });
-    userMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(map);
-
-    map.locate({ watch: true, setView: false, enableHighAccuracy: true }); 
-    map.on('locationfound', (e) => {
-        currentLatLng = e.latlng;
-        userMarker.setLatLng(e.latlng);
+    this.map = L.map("map", {
+      center: [-18.4783, -70.3126],
+      zoom: 14,
+      minZoom: 13,
+      maxBounds: limites,
+      maxBoundsViscosity: 1.0,
+      zoomControl: false,
     });
 
-    window.centrarEnUsuario = function() {
-        if (currentLatLng) map.setView(currentLatLng, 16);
-    };
-}
+    this.baseLayer = L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      { maxZoom: 19 },
+    ).addTo(this.map);
 
-// --- 7. DESCARGA DESDE FIREBASE (SOPORTE COLORES INDEPENDIENTES Y FLECHAS CORREGIDAS) ---
-function descargarRutas() {
-    db.collection("lineas").get().then((querySnapshot) => {
-        lineasAgrupadas = {}; 
+    this.descargarRutas();
+
+    const gpsIcon = L.divIcon({
+      className: "user-location-icon",
+      iconSize: [18, 18],
+      iconAnchor: [9, 9],
+    });
+    this.userMarker = L.marker([0, 0], { icon: gpsIcon }).addTo(this.map);
+
+    this.map.locate({ watch: true, setView: false, enableHighAccuracy: true });
+    this.map.on("locationfound", (e) => {
+      this.currentLatLng = e.latlng;
+      this.userMarker.setLatLng(e.latlng);
+    });
+  },
+
+  centrarEnUsuario() {
+    if (this.currentLatLng) this.map.setView(this.currentLatLng, 16);
+  },
+
+  descargarRutas() {
+    const container = document.getElementById("lines-container");
+    container.innerHTML = "<p style='text-align:center;'>Cargando líneas…</p>";
+
+    db.collection("lineas")
+      .get()
+      .then((querySnapshot) => {
+        this.lineasAgrupadas = {};
 
         querySnapshot.forEach((doc) => {
-            const datos = doc.data();
-            
-            let nombreCrudo = datos.nombre || "Sin Nombre";
-            let nombreBase = nombreCrudo.replace(/ \((Ida|Vuelta|ida|vuelta)\)/gi, "").trim();
-            
-            const cIda = datos.color_ida || datos.color || "#1e90ff";
-            const cVuelta = datos.color_vuelta || datos.color || "#ba1a3a";
-            
-            if (!lineasAgrupadas[nombreBase]) {
-                lineasAgrupadas[nombreBase] = { 
-                    ida: null, 
-                    vuelta: null, 
-                    tDia: datos.tarifaDia || 1000, 
-                    tNoche: datos.tarifaNoche || 1300 
-                };
-            }
+          const datos = doc.data();
+          const nombreCrudo = datos.nombre || "Sin Nombre";
+          const nombreBase = nombreCrudo
+            .replace(/ \((Ida|Vuelta|ida|vuelta)\)/gi, "")
+            .trim();
 
-            const crearCapaGeoJSON = (coordenadasTexto, tipoDireccion, colorEspecifico) => {
-                if (!coordenadasTexto || coordenadasTexto.trim() === "") return null;
-                try {
-                    const featureData = {
-                        "type": "Feature",
-                        "properties": { "nombre": `${nombreBase} (${tipoDireccion})`, "color": colorEspecifico },
-                        "geometry": { "type": "LineString", "coordinates": JSON.parse(coordenadasTexto) }
-                    };
-                    
-                    let flechas = null; // Preparamos la variable vacía
+          const colorIda = datos.color_ida || datos.color || "#1e90ff";
+          const colorVuelta = datos.color_vuelta || datos.color || "#ba1a3a";
 
-                    const capa = L.geoJSON(featureData, {
-                        style: { color: colorEspecifico, weight: 6, opacity: 0.85 },
-                        // El truco está aquí: detectamos la línea "desnuda" y le pegamos las flechas
-                        onEachFeature: function (feature, layer) {
-                            flechas = L.polylineDecorator(layer, {
-                                patterns: [
-                                    {
-                                        offset: 25,
-                                        repeat: 80,
-                                        symbol: L.Symbol.arrowHead({
-                                            pixelSize: 14, 
-                                            polygon: true, 
-                                            pathOptions: { 
-                                                stroke: true, // Asegura que el borde se dibuje
-                                                color: '#ffffff', // Borde blanco
-                                                fillColor: colorEspecifico, // Relleno azul o carmesí
-                                                fillOpacity: 1, 
-                                                weight: 2 
-                                            }
-                                        })
-                                    }
-                                ]
-                            });
-                        }
-                    }).bindPopup(`
-                        <div style="text-align:center; font-family: 'Poppins', sans-serif;">
-                            <b>🚕 ${nombreBase} (${tipoDireccion})</b><br><br>
-                            ${obtenerTarifaActual(datos.tarifaDia || 1000, datos.tarifaNoche || 1300)}
-                        </div>
-                    `);
-
-                    return { capa: capa, flechas: flechas, color: colorEspecifico, visible: false, error: false };
-                } catch (error) {
-                    console.error(`Error de parseo en ${nombreBase} (${tipoDireccion}):`, error);
-                    return { error: true };
-                }
+          if (!this.lineasAgrupadas[nombreBase]) {
+            this.lineasAgrupadas[nombreBase] = {
+              ida: null,
+              vuelta: null,
+              tDia: datos.tarifaDia ?? 1000,
+              tNoche: datos.tarifaNoche ?? 1300,
             };
+          }
 
-            // Inyección mediante formato de Documento Único optimizado
-            if (datos.ruta_ida) {
-                lineasAgrupadas[nombreBase].ida = crearCapaGeoJSON(datos.ruta_ida, "Ida", cIda);
-            }
-            if (datos.ruta_vuelta) {
-                lineasAgrupadas[nombreBase].vuelta = crearCapaGeoJSON(datos.ruta_vuelta, "Vuelta", cVuelta);
-            }
+          const crearCapaGeoJSON = (
+            coordenadasTexto,
+            tipoDireccion,
+            colorEspecifico,
+          ) => {
+            if (!coordenadasTexto || coordenadasTexto.trim() === "")
+              return null;
 
-            // Fallback de compatibilidad
-            if (datos.coordenadas) {
-                let esIda = nombreCrudo.toLowerCase().includes("ida");
-                let esVuelta = nombreCrudo.toLowerCase().includes("vuelta");
-                
-                if (esIda) {
-                    lineasAgrupadas[nombreBase].ida = crearCapaGeoJSON(datos.coordenadas, "Ida", cIda);
-                } else if (esVuelta) {
-                    lineasAgrupadas[nombreBase].vuelta = crearCapaGeoJSON(datos.coordenadas, "Vuelta", cVuelta);
-                }
+            try {
+              const coords = JSON.parse(coordenadasTexto);
+              const featureData = {
+                type: "Feature",
+                properties: {
+                  nombre: `${nombreBase} (${tipoDireccion})`,
+                  color: colorEspecifico,
+                },
+                geometry: { type: "LineString", coordinates: coords },
+              };
+
+              const safeNombre = escapeHtml(nombreBase);
+              const safeTarifaHtml = this.obtenerTarifaActual(
+                datos.tarifaDia,
+                datos.tarifaNoche,
+              );
+
+              const capaLinea = L.geoJSON(featureData, {
+                style: { color: colorEspecifico, weight: 6, opacity: 0.85 },
+              }).bindPopup(`
+                <div style="text-align:center; font-family: 'Poppins', sans-serif;">
+                  <b>🚕 ${safeNombre} (${escapeHtml(tipoDireccion)})</b><br><br>
+                  ${safeTarifaHtml}
+                </div>
+              `);
+
+              const flechasDecorator = L.polylineDecorator(capaLinea, {
+                patterns: [
+                  {
+                    offset: 25,
+                    repeat: 80,
+                    symbol: L.Symbol.arrowHead({
+                      pixelSize: 14,
+                      polygon: true,
+                      pathOptions: {
+                        stroke: true,
+                        color: "#ffffff",
+                        fillColor: colorEspecifico,
+                        fillOpacity: 1,
+                        weight: 2,
+                      },
+                    }),
+                  },
+                ],
+              });
+
+              return {
+                capa: capaLinea,
+                flechas: flechasDecorator,
+                color: colorEspecifico,
+                visible: false,
+                error: false,
+              };
+            } catch (error) {
+              console.error(
+                `Error de parseo en ${nombreBase} (${tipoDireccion}):`,
+                error,
+              );
+              return { error: true };
             }
+          };
+
+          if (datos.ruta_ida) {
+            this.lineasAgrupadas[nombreBase].ida = crearCapaGeoJSON(
+              datos.ruta_ida,
+              "Ida",
+              colorIda,
+            );
+          }
+          if (datos.ruta_vuelta) {
+            this.lineasAgrupadas[nombreBase].vuelta = crearCapaGeoJSON(
+              datos.ruta_vuelta,
+              "Vuelta",
+              colorVuelta,
+            );
+          }
+
+          if (datos.coordenadas) {
+            const esIda = nombreCrudo.toLowerCase().includes("ida");
+            const esVuelta = nombreCrudo.toLowerCase().includes("vuelta");
+
+            if (esIda && !this.lineasAgrupadas[nombreBase].ida) {
+              this.lineasAgrupadas[nombreBase].ida = crearCapaGeoJSON(
+                datos.coordenadas,
+                "Ida",
+                colorIda,
+              );
+            } else if (esVuelta && !this.lineasAgrupadas[nombreBase].vuelta) {
+              this.lineasAgrupadas[nombreBase].vuelta = crearCapaGeoJSON(
+                datos.coordenadas,
+                "Vuelta",
+                colorVuelta,
+              );
+            }
+          }
         });
 
-        renderizarPanel();
+        this.renderizarPanel();
+      })
+      .catch((error) => {
+        console.error("Error conectando a Firebase:", error);
+        container.innerHTML =
+          "<p style='text-align:center; color:red;'>Error al cargar líneas. Intenta de nuevo más tarde.</p>";
+      });
+  },
 
-    }).catch(e => {
-        console.error("Error conectando a Firebase:", e);
-        document.getElementById('lines-container').innerHTML = "<p style='text-align:center;'>Error de enlace con el servidor de datos.</p>";
-    });
-}
-
-// --- 8. RENDERIZADO DINÁMICO DE INTERRUPTORES ---
-function renderizarPanel() {
+  renderizarPanel() {
     let html = "";
     let hayLineas = false;
 
-    for (const [nombreLinea, infoLinea] of Object.entries(lineasAgrupadas)) {
-        hayLineas = true;
-        let htmlIda = "";
-        let htmlVuelta = "";
+    for (const [nombreLinea, info] of Object.entries(this.lineasAgrupadas)) {
+      hayLineas = true;
+      const safeNombre = escapeHtml(nombreLinea);
+      let htmlIda = "";
+      let htmlVuelta = "";
 
-        if (infoLinea.ida && !infoLinea.ida.error) {
-            htmlIda = `
-            <div class="toggle-row">
-                <span><span class="color-dot" style="background:${infoLinea.ida.color}"></span> Recorrido Ida</span>
-                <label class="switch">
-                  <input type="checkbox" onchange="toggleCapa('${nombreLinea}', 'ida', this.checked)">
-                  <span class="slider round ida"></span>
-                </label>
-            </div>`;
-        }
+      if (info.ida && !info.ida.error) {
+        const colorIdaSafe = isValidColor(info.ida.color)
+          ? info.ida.color
+          : "#1e90ff";
+        htmlIda = `
+          <div class="toggle-row">
+            <span><span class="color-dot" style="background:${colorIdaSafe}"></span> Recorrido Ida</span>
+            <label class="switch">
+              <input type="checkbox" onchange="App.toggleCapa('${escapeHtml(nombreLinea)}', 'ida', this.checked)">
+              <span class="slider round ida"></span>
+            </label>
+          </div>`;
+      }
 
-        if (infoLinea.vuelta && !infoLinea.vuelta.error) {
-            htmlVuelta = `
-            <div class="toggle-row">
-                <span><span class="color-dot" style="background:${infoLinea.vuelta.color}"></span> Recorrido Vuelta</span>
-                <label class="switch">
-                  <input type="checkbox" onchange="toggleCapa('${nombreLinea}', 'vuelta', this.checked)">
-                  <span class="slider round vuelta"></span>
-                </label>
-            </div>`;
-        }
+      if (info.vuelta && !info.vuelta.error) {
+        const colorVueltaSafe = isValidColor(info.vuelta.color)
+          ? info.vuelta.color
+          : "#ba1a3a";
+        htmlVuelta = `
+          <div class="toggle-row">
+            <span><span class="color-dot" style="background:${colorVueltaSafe}"></span> Recorrido Vuelta</span>
+            <label class="switch">
+              <input type="checkbox" onchange="App.toggleCapa('${escapeHtml(nombreLinea)}', 'vuelta', this.checked)">
+              <span class="slider round vuelta"></span>
+            </label>
+          </div>`;
+      }
 
-        let etiquetaTarifa = obtenerTarifaActual(infoLinea.tDia, infoLinea.tNoche);
+      const tarifa = this.obtenerTarifaActual(info.tDia, info.tNoche);
 
-        if (htmlIda !== "" || htmlVuelta !== "") {
-            html += `
-            <div class="line-card">
-                <h3 class="line-title">🚕 ${nombreLinea}</h3>
-                <div class="tarifa-container">
-                    ${etiquetaTarifa}
-                </div>
-                ${htmlIda}
-                ${htmlVuelta}
-            </div>`;
-        }
+      if (htmlIda || htmlVuelta) {
+        html += `
+          <div class="line-card">
+            <h3 class="line-title">🚕 ${safeNombre}</h3>
+            <div class="tarifa-container">${tarifa}</div>
+            ${htmlIda}
+            ${htmlVuelta}
+          </div>`;
+      }
     }
 
     if (!hayLineas) {
-        html = "<p style='text-align:center; color:#666;'>No se encontraron líneas configuradas.</p>";
+      html =
+        "<p style='text-align:center; color:#666;'>No se encontraron líneas configuradas.</p>";
     }
 
-    document.getElementById('lines-container').innerHTML = html;
-}
+    document.getElementById("lines-container").innerHTML = html;
+  },
 
-// --- 9. INTERRUPTOR DE CAPAS (ENHAZADO CON CONTROL DE FLECHAS) ---
-window.toggleCapa = function(nombreBase, direccion, isChecked) {
-    let ruta = lineasAgrupadas[nombreBase][direccion];
+  toggleCapa(nombreBase, direccion, isChecked) {
+    const ruta = this.lineasAgrupadas[nombreBase]?.[direccion];
     if (!ruta || !ruta.capa) return;
 
     if (isChecked) {
-        ruta.capa.addTo(map);
-        if (ruta.flechas) ruta.flechas.addTo(map); 
-        ruta.visible = true;
-        map.fitBounds(ruta.capa.getBounds(), { padding: [40, 40] });
+      ruta.capa.addTo(this.map);
+      if (ruta.flechas) ruta.flechas.addTo(this.map);
+      ruta.visible = true;
+      this.map.fitBounds(ruta.capa.getBounds(), { padding: [40, 40] });
     } else {
-        map.removeLayer(ruta.capa);
-        if (ruta.flechas) map.removeLayer(ruta.flechas); 
-        ruta.visible = false;
+      this.map.removeLayer(ruta.capa);
+      if (ruta.flechas) this.map.removeLayer(ruta.flechas);
+      ruta.visible = false;
     }
-}
+  },
 
-// --- 10. CONTROL DE PESTAÑAS ---
-window.cambiarPestana = function(pestana) {
-    const tabs = document.querySelectorAll('.tab');
-    const contentDestinos = document.getElementById('tab-destinos');
-    const contentLineas = document.getElementById('tab-lineas');
+  cambiarPestana(pestana) {
+    const tabs = document.querySelectorAll(".tab");
+    const contentDestinos = document.getElementById("tab-destinos");
+    const contentLineas = document.getElementById("tab-lineas");
 
-    tabs.forEach(t => { t.classList.remove('active'); t.classList.add('inactive'); });
-    contentDestinos.classList.remove('active');
-    contentLineas.classList.remove('active');
+    tabs.forEach((t) => {
+      t.classList.remove("active");
+      t.classList.add("inactive");
+    });
+    contentDestinos.classList.remove("active");
+    contentLineas.classList.remove("active");
 
-    if(pestana === 'destinos') {
-        tabs[0].classList.remove('inactive'); 
-        tabs[0].classList.add('active');
-        contentDestinos.classList.add('active');
+    if (pestana === "destinos") {
+      tabs[0].classList.remove("inactive");
+      tabs[0].classList.add("active");
+      contentDestinos.classList.add("active");
     } else {
-        tabs[1].classList.remove('inactive'); 
-        tabs[1].classList.add('active');
-        contentLineas.classList.add('active');
+      tabs[1].classList.remove("inactive");
+      tabs[1].classList.add("active");
+      contentLineas.classList.add("active");
     }
-}
+  },
 
-// --- 11. NAVEGACIÓN A HITOS EXACTOS ---
-window.irADestino = function(lat, lng, nombre) {
+  irADestino(lat, lng, nombre) {
     const ubicacion = L.latLng(lat, lng);
-    if (destinoMarcadorTemp) map.removeLayer(destinoMarcadorTemp);
+    if (this.destinoMarcadorTemp)
+      this.map.removeLayer(this.destinoMarcadorTemp);
 
-    destinoMarcadorTemp = L.marker(ubicacion).addTo(map)
-        .bindPopup(`<div style="font-family:'Poppins';">📍 <b>${nombre}</b></div>`)
-        .openPopup();
+    const safeNombre = escapeHtml(nombre);
+    this.destinoMarcadorTemp = L.marker(ubicacion)
+      .addTo(this.map)
+      .bindPopup(
+        `<div style="font-family:'Poppins';">📍 <b>${safeNombre}</b></div>`,
+      )
+      .openPopup();
 
-    map.flyTo(ubicacion, 16, { animate: true, duration: 1.5 });
-    toggleSidePanel();
-}
+    this.map.flyTo(ubicacion, 16, { animate: true, duration: 1.5 });
+    this.toggleSidePanel();
+  },
 
-// --- 12. BUSCADOR DINÁMICO ---
-window.manejarInputBusqueda = function() {
-    const query = document.getElementById('panel-search-input').value.trim();
-    const cajaSugerencias = document.getElementById('search-suggestions');
+  manejarInputBusqueda() {
+    const query = document.getElementById("panel-search-input").value.trim();
+    const cajaSugerencias = document.getElementById("search-suggestions");
 
     if (query.length < 3) {
-        cajaSugerencias.classList.remove('active');
-        return;
+      cajaSugerencias.classList.remove("active");
+      return;
     }
 
-    clearTimeout(temporizadorBusqueda);
-    temporizadorBusqueda = setTimeout(async () => {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}, Arica, Chile&limit=10`;
+    clearTimeout(this.temporizadorBusqueda);
+    this.temporizadorBusqueda = setTimeout(async () => {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}, Arica, Chile&limit=10&countrycodes=cl`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Error en la búsqueda");
+        const data = await response.json();
 
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (data.length > 0) {
-                mostrarSugerenciasVisuales(data);
-            } else {
-                cajaSugerencias.innerHTML = '<li class="suggestion-item">No se encontraron lugares con ese nombre.</li>';
-                cajaSugerencias.classList.add('active');
-            }
-        } catch (error) {
-            console.error("Error en búsqueda:", error);
+        if (data.length > 0) {
+          this.mostrarSugerenciasVisuales(data);
+        } else {
+          cajaSugerencias.innerHTML =
+            '<li class="suggestion-item">No se encontraron lugares con ese nombre.</li>';
+          cajaSugerencias.classList.add("active");
         }
+      } catch (error) {
+        console.error("Error en búsqueda:", error);
+        cajaSugerencias.innerHTML =
+          '<li class="suggestion-item">Error al buscar. Intenta de nuevo.</li>';
+        cajaSugerencias.classList.add("active");
+      }
     }, 600);
-};
+  },
 
-function mostrarSugerenciasVisuales(resultados) {
-    const cajaSugerencias = document.getElementById('search-suggestions');
-    let html = '';
-    
-    resultados.forEach(res => {
-        const partesNombre = res.display_name.split(',');
-        const tituloPrincipal = partesNombre[0];
-        const subtituloCalle = partesNombre.slice(1, 3).join(', ').trim(); 
-        const tituloSeguro = tituloPrincipal.replace(/'/g, "\\'");
+  mostrarSugerenciasVisuales(resultados) {
+    const caja = document.getElementById("search-suggestions");
+    let html = "";
 
-        html += `
-            <li class="suggestion-item" onclick="seleccionarSugerencia(${res.lat}, ${res.lon}, '${tituloSeguro}')">
-                <span class="suggestion-icon">📍</span>
-                <b>${tituloPrincipal}</b><br>
-                <small style="color:#888;">${subtituloCalle}</small>
-            </li>
-        `;
+    resultados.forEach((res) => {
+      const partes = res.display_name.split(",");
+      const titulo = partes[0];
+      const subtitulo = partes.slice(1, 3).join(", ").trim();
+
+      html += `
+        <li class="suggestion-item" data-lat="${res.lat}" data-lon="${res.lon}" data-nombre="${escapeHtml(titulo)}">
+          <span class="suggestion-icon">📍</span>
+          <b>${escapeHtml(titulo)}</b><br>
+          <small style="color:#888;">${escapeHtml(subtitulo)}</small>
+        </li>`;
     });
 
-    cajaSugerencias.innerHTML = html;
-    cajaSugerencias.classList.add('active');
-}
+    caja.innerHTML = html;
+    caja.classList.add("active");
 
-window.seleccionarSugerencia = function(lat, lng, nombre) {
-    document.getElementById('panel-search-input').value = nombre;
-    document.getElementById('search-suggestions').classList.remove('active');
-    irADestino(lat, lng, nombre);
+    caja.onclick = (e) => {
+      const item = e.target.closest(".suggestion-item");
+      if (!item) return;
+      const lat = parseFloat(item.dataset.lat);
+      const lon = parseFloat(item.dataset.lon);
+      const nombre = item.dataset.nombre;
+      App.seleccionarSugerencia(lat, lon, nombre);
+    };
+  },
+
+  seleccionarSugerencia(lat, lng, nombre) {
+    document.getElementById("panel-search-input").value = nombre;
+    document.getElementById("search-suggestions").classList.remove("active");
+    this.irADestino(lat, lng, nombre);
+  },
+
+  forzarBusqueda() {
+    this.manejarInputBusqueda();
+  },
 };
 
-window.forzarBusqueda = function() {
-    manejarInputBusqueda();
-};
+window.entrarInvitado = () => App.entrarInvitado();
+window.toggleTheme = () => App.toggleTheme();
+window.toggleSidePanel = () => App.toggleSidePanel();
+window.centrarEnUsuario = () => App.centrarEnUsuario();
+window.toggleCapa = (nombre, dir, check) => App.toggleCapa(nombre, dir, check);
+window.cambiarPestana = (pestana) => App.cambiarPestana(pestana);
+window.irADestino = (lat, lng, nombre) => App.irADestino(lat, lng, nombre);
+window.manejarInputBusqueda = () => App.manejarInputBusqueda();
+window.seleccionarSugerencia = (lat, lng, nombre) =>
+  App.seleccionarSugerencia(lat, lng, nombre);
+window.forzarBusqueda = () => App.forzarBusqueda();
