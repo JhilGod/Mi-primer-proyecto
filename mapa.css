@@ -11,104 +11,104 @@ html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Pop
 #map { height: 100vh; width: 100vw; display: none; z-index: 1; }
 .leaflet-control-attribution, .leaflet-control-zoom { display: none !important; }
 
-/* --- BOTONES FLOTANTES --- */
-#btn-menu { position: absolute; top: 20px; left: 20px; z-index: 1000; background: white; color: #1a5276; border: none; padding: 12px 20px; border-radius: 25px; font-family: 'Poppins'; font-weight: 600; font-size: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); cursor: pointer; transition: 0.3s; }
-#btn-theme { position: absolute; top: 20px; right: 20px; z-index: 1000; width: 45px; height: 45px; background: white; border: none; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: none; cursor: pointer; transition: 0.3s; }
-.btn-locate { position: absolute; bottom: 30px; right: 20px; z-index: 1000; width: 55px; height: 55px; background: white; border: none; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: none; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+.btn-locate { position: absolute; bottom: 30px; right: 20px; z-index: 1000; width: 55px; height: 55px; background: white; border: none; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
 
-/* --- PANEL LATERAL --- */
-#side-panel { position: fixed; top: 0; left: -100%; width: 320px; max-width: 85%; height: 100%; background: white; box-shadow: 5px 0 25px rgba(0,0,0,0.2); z-index: 2001; transition: left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; }
-#side-panel.active { left: 0; }
+/* --- ICONO GPS (Personalizado SVG) --- */
+.user-location-icon { background-color: transparent; border-radius: 50%; box-shadow: 0 0 10px rgba(16,124,145,0.5); }
+.user-location-icon::after { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: #107c91; opacity: 0.4; animation: pulse 2s infinite; top: 0; left: 0; }
+@keyframes pulse { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(3); opacity: 0; } }
 
-/* --- PESTAÑAS --- */
-.panel-header { display: flex; justify-content: space-between; align-items: flex-end; padding: 15px 15px 0 15px; border-bottom: 1px solid #ddd; background: #e0e7ef; }
-.panel-tabs { display: flex; align-items: flex-end; }
-.tab { padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 12px 12px 0 0; transition: 0.2s; font-weight: 600; }
-.tab.active { background-color: white; color: #1a5276; position: relative; z-index: 2; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); border: 1px solid #ddd; border-bottom: none; }
-.tab.inactive { background-color: #c9d6e2; color: #666; margin-left: -5px; padding-left: 15px; z-index: 1; border: 1px solid #b0c0d0; }
+/* --- ICONO PARADERO (Personalizado SVG) --- */
+.custom-paradero-icon div { transition: transform 0.2s; cursor: pointer; }
+.custom-paradero-icon div:active { transform: scale(0.9); }
 
-.btn-close-panel { background: transparent; border: none; font-size: 24px; color: #1a5276; cursor: pointer; padding-bottom: 10px; }
-.panel-body { padding: 20px; flex: 1; overflow-y: auto; background: white; }
-.tab-content { display: none; }
-.tab-content.active { display: block; animation: fadeIn 0.3s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-/* --- BUSCADOR Y SUGERENCIAS --- */
-.search-container { position: relative; margin-bottom: 20px; }
-.panel-search-box { display: flex; border: 1px solid #ddd; border-radius: 20px; overflow: hidden; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-.panel-search-box input { flex: 1; border: none; padding: 10px 15px; outline: none; font-family: 'Poppins'; font-size: 14px; background: transparent; }
-.panel-search-box button { background: #107c91; color: white; border: none; padding: 0 15px; cursor: pointer; font-size: 14px; transition: 0.3s; }
-
-.suggestions-list {
-    position: absolute; top: 100%; left: 0; right: 0; background: white;
-    border: 1px solid #ddd; border-radius: 15px; margin-top: 5px;
-    padding: 0; list-style: none; z-index: 10;
-    max-height: 230px; overflow-y: auto;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15); display: none;
-}
-.suggestions-list.active { display: block; animation: fadeIn 0.2s ease; }
-.suggestion-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 13px; color: #444; line-height: 1.3; }
-.suggestion-item:last-child { border-bottom: none; }
-.suggestion-item:hover { background: #f0f2f5; }
-.suggestion-icon { margin-right: 8px; color: #107c91; font-size: 16px; vertical-align: middle; }
-
-/* --- LISTA DE DESTINOS --- */
-.panel-title { text-align: center; margin: 0 0 15px 0; font-size: 14px; letter-spacing: 1px; color: #666; font-weight: 600; }
-.stop-list { list-style: none; padding: 0; margin: 0; }
-.stop-list li { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; padding: 12px 20px; border-radius: 15px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; background: #fff; }
-.stop-list li:active { transform: scale(0.97); background: #f8f9fa; }
-.stop-name { font-size: 14px; font-weight: 600; color: #333; text-transform: uppercase; }
-
-.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-.dot-red { background-color: #e74c3c; }
-.dot-magenta { background-color: #9b59b6; }
-.dot-blue { background-color: #3498db; }
-.dot-orange { background-color: #f39c12; }
-.dot-green { background-color: #2ecc71; }
-
-/* --- TARJETAS DE LÍNEAS Y ETIQUETAS --- */
-.line-card { background: #fff; border: 1px solid #eee; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-.line-title { margin: 0 0 12px 0; font-size: 16px; color: #333; font-weight: 600; text-align: center; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
-.toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; color: #555; font-weight: 600; }
-.toggle-row:last-child { margin-bottom: 0; }
-.color-dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
-
-.tarifa-container { text-align: center; margin-bottom: 15px; }
+/* --- TARIFAS --- */
 .tarifa-badge { display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 13px; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 .tarifa-badge.dia { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
 .tarifa-badge.noche { background-color: #cce5ff; color: #004085; border: 1px solid #b8daff; }
 
-/* --- INTERRUPTORES (Toggle Switch) --- */
+/* --- BARRA SUPERIOR GLOBAL --- */
+.hidden-ui { display: none !important; }
+.top-bar { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; background: var(--bg-card, rgba(255, 255, 255, 0.95)); backdrop-filter: blur(10px); border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; padding: 8px 15px; z-index: 1000; gap: 10px; transition: background 0.3s, box-shadow 0.3s; }
+.search-wrapper { flex-grow: 1; display: flex; align-items: center; background: transparent; position: relative; }
+.search-icon { font-size: 16px; color: #888; }
+.search-wrapper input { width: 100%; border: none; background: transparent; padding: 8px 10px; font-family: 'Poppins', sans-serif; font-size: 14px; outline: none; color: var(--text-color, #333); }
+.icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-color, #333); padding: 5px; display: flex; align-items: center; justify-content: center; transition: color 0.3s; }
+
+/* --- TARJETA INFERIOR (BOTTOM SHEET) --- */
+.bottom-sheet { position: absolute; bottom: 0; left: 0; width: 100%; background: var(--bg-card, #ffffff); border-radius: 20px 20px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); z-index: 1000; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s; padding: 15px 20px 25px; font-family: 'Poppins', sans-serif; box-sizing: border-box; }
+.bottom-sheet.active { transform: translateY(0); }
+.sheet-drag-handle { width: 40px; height: 5px; background: #ccc; border-radius: 3px; margin: 0 auto 15px; }
+.sheet-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+.title-container { flex-grow: 1; }
+.title-container h3 { margin: 0; font-size: 18px; color: var(--text-color, #222); }
+.title-container p { margin: 2px 0 0; font-size: 13px; color: #666; }
+.star-btn { font-size: 24px; color: #888; }
+.close-sheet-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: #888; padding: 5px; }
+.section-label { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--text-color, #333); }
+
+/* --- LISTA DE DESTINOS (BOTONES VERDES) --- */
+.destination-list-container { display: flex; flex-direction: column; gap: 10px; max-height: 35vh; overflow-y: auto; padding-bottom: 15px; padding-right: 5px; }
+.destination-list-container::-webkit-scrollbar { width: 6px; }
+.destination-list-container::-webkit-scrollbar-track { background: transparent; }
+.destination-list-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+
+.line-destination-card { display: flex; align-items: center; background: #27ae60; color: white; border-radius: 12px; padding: 12px 15px; cursor: pointer; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2); transition: transform 0.1s, background 0.3s; border: none; width: 100%; text-align: left; font-family: 'Poppins', sans-serif; }
+.line-destination-card:active { transform: scale(0.98); }
+.line-id { padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; margin-right: 15px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.line-dest-text { font-size: 14px; flex-grow: 1; line-height: 1.3; }
+.line-dest-text strong { display: block; font-size: 11px; text-transform: uppercase; opacity: 0.85; margin-bottom: 2px; font-weight: 600; }
+
+/* --- SUGERENCIAS DEL BUSCADOR --- */
+.suggestions-list { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ddd; border-radius: 10px; margin-top: 5px; padding: 0; list-style: none; max-height: 230px; overflow-y: auto; box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+.suggestions-list.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- MODO OSCURO --- */
+body.dark-theme { --bg-card: rgba(48, 49, 52, 0.95); --text-color: #e8eaed; background-color: #202124; }
+body.dark-theme .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+body.dark-theme .btn-locate { background: #303134; color: #e8eaed; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+body.dark-theme .search-wrapper input { color: #e8eaed; }
+body.dark-theme .search-wrapper input::placeholder { color: #9aa0a6; }
+body.dark-theme .title-container p, body.dark-theme .close-sheet-btn { color: #9aa0a6; }
+body.dark-theme .sheet-drag-handle { background: #5f6368; }
+body.dark-theme .suggestions-list { background: #303134; border-color: #5f6368; box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
+body.dark-theme .suggestion-item { border-bottom: 1px solid #444; color: #e8eaed; padding: 12px; cursor: pointer;}
+body.dark-theme .suggestion-item:hover { background: #444; }
+body.dark-theme .tarifa-badge.dia { background-color: #3f3616; color: #ffeb8a; border-color: #665b22; }
+body.dark-theme .tarifa-badge.noche { background-color: #1a365d; color: #90cdf4; border-color: #2a4365; }
+body.dark-theme .line-destination-card { background: #1e8449; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); }
+
+/* --- MENÚ LATERAL (SIDEBAR) --- */
+.sidebar { position: fixed; top: 0; left: -320px; width: 320px; height: 100%; background: var(--bg-card, #ffffff); z-index: 2000; box-shadow: 4px 0 15px rgba(0,0,0,0.1); transition: left 0.3s ease; display: flex; flex-direction: column; }
+.sidebar.active { left: 0; }
+.sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s; }
+.sidebar-overlay.active { display: block; opacity: 1; }
+.sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #eee; }
+.sidebar-header h3 { margin: 0; color: var(--text-color, #333); }
+.close-sidebar { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; }
+.sidebar-tabs { display: flex; border-bottom: 1px solid #eee; }
+.tab-btn { flex: 1; padding: 12px; border: none; background: transparent; cursor: pointer; font-family: 'Poppins'; font-weight: 600; color: #888; border-bottom: 3px solid transparent; transition: 0.3s; }
+.tab-btn.active { color: #107c91; border-bottom-color: #107c91; }
+.sidebar-content { padding: 15px; overflow-y: auto; flex-grow: 1; }
+.sidebar-content.hidden { display: none; }
+
+/* --- TARJETAS CON SWITCHES (Ida y Vuelta) --- */
+.line-control-card { background: var(--bg-card, #fff); border: 1px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.line-control-header { text-align: center; margin-bottom: 10px; font-weight: 600; color: var(--text-color, #333); }
+.line-control-header hr { border: 0; border-top: 1px dashed #ccc; margin: 10px 0; }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+.toggle-label { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-color, #333); font-weight: 600; }
+.color-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+/* --- SWITCH (Interruptor estilo iOS) --- */
 .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
-.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-input:checked + .slider.ida { background-color: #1e90ff; }
-input:checked + .slider.vuelta { background-color: #ba1a3a; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+input:checked + .slider { background-color: #27ae60; }
 input:checked + .slider:before { transform: translateX(20px); }
 
-/* --- ICONO GPS --- */
-.user-location-icon { background-color: #107c91; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px rgba(16,124,145,0.5); }
-.user-location-icon::after { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: #107c91; opacity: 0.4; animation: pulse 2s infinite; top: 0; left: 0; }
-@keyframes pulse { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(3); opacity: 0; } }
-
-/* --- MODO OSCURO --- */
-body.dark-theme { background-color: #202124; }
-body.dark-theme .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
-body.dark-theme #btn-menu, body.dark-theme #btn-theme, body.dark-theme .btn-locate, body.dark-theme #side-panel { background: #303134; color: #e8eaed; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
-body.dark-theme .panel-header { background: #202124; border-bottom: 1px solid #5f6368; }
-body.dark-theme .tab.active { background-color: #303134; color: #8ab4f8; border-color: #5f6368; }
-body.dark-theme .tab.inactive { background-color: #202124; color: #9aa0a6; border-color: #444; }
-body.dark-theme .panel-body { background: #303134; }
-body.dark-theme .panel-search-box { background: #202124; border-color: #5f6368; }
-body.dark-theme .panel-search-box input { color: #e8eaed; }
-body.dark-theme .panel-search-box button { background: #8ab4f8; color: #202124; }
-body.dark-theme .suggestions-list { background: #202124; border-color: #5f6368; box-shadow: 0 8px 20px rgba(0,0,0,0.6); }
-body.dark-theme .suggestion-item { border-bottom-color: #444; color: #e8eaed; }
-body.dark-theme .suggestion-item:hover { background: #303134; }
-body.dark-theme .line-card, body.dark-theme .stop-list li { background: #202124; border: 1px solid #5f6368; }
-body.dark-theme .line-title { color: #e8eaed; border-bottom-color: #5f6368; }
-body.dark-theme .toggle-row, body.dark-theme .stop-name, body.dark-theme .panel-title { color: #bdc1c6; }
-body.dark-theme .slider { background-color: #5f6368; }
-body.dark-theme .tarifa-badge.dia { background-color: #3f3616; color: #ffeb8a; border-color: #665b22; }
-body.dark-theme .tarifa-badge.noche { background-color: #1a365d; color: #90cdf4; border-color: #2a4365; }
+/* Tema oscuro ajustes */
+body.dark-theme .line-control-card { border-color: #444; }
+body.dark-theme .sidebar-header, body.dark-theme .sidebar-tabs { border-color: #444; }

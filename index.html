@@ -25,61 +25,54 @@
         </div>
     </div>
 
-    <button id="btn-menu" onclick="toggleSidePanel()" style="display: none;">☰ Rutas</button>
+    <header id="top-bar" class="top-bar hidden-ui">
+        <button class="icon-btn" onclick="toggleMenu()" title="Menú">☰</button>
+        <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="global-search" placeholder="Buscar dirección..." autocomplete="off" oninput="manejarInputBusqueda()">
+            <ul id="search-suggestions" class="suggestions-list"></ul>
+        </div>
+        <button class="icon-btn" onclick="verFavoritos()" title="Favoritos">⭐</button>
+        <button id="btn-theme" class="icon-btn" onclick="toggleTheme()" title="Cambiar tema">🌙</button>
+    </header>
 
-    <button id="btn-theme" onclick="toggleTheme()" title="Cambiar tema">🌙</button>
-
-    <div id="map"></div>
-
-    <button onclick="centrarEnUsuario()" class="btn-locate" title="Mi ubicación">🎯</button>
-
-    <div id="side-panel">
-        <div class="panel-header">
-            <div class="panel-tabs">
-                <div class="tab active" onclick="cambiarPestana('destinos')">Destinos</div>
-                <div class="tab inactive" onclick="cambiarPestana('lineas')">Líneas</div>
-            </div>
-            <button class="btn-close-panel" onclick="toggleSidePanel()">✕</button>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3>Directorio de Líneas</h3>
+            <button class="close-sidebar" onclick="toggleMenu()">✕</button>
+        </div>
+        
+        <div class="sidebar-tabs">
+            <button class="tab-btn active" id="tab-lineas" onclick="switchTab('lineas')">Todas las Líneas</button>
+            <button class="tab-btn" id="tab-favs" onclick="switchTab('favs')">Mis Favoritos</button>
         </div>
 
-        <div class="panel-body">
-            <div id="tab-destinos" class="tab-content active">
-                <div class="search-container">
-                    <div class="panel-search-box">
-                        <input type="text" id="panel-search-input" placeholder="Buscar dirección o lugar..." autocomplete="off" oninput="manejarInputBusqueda()">
-                        <button onclick="forzarBusqueda()">🔍</button>
-                    </div>
-                    <ul id="search-suggestions" class="suggestions-list"></ul>
-                </div>
-
-                <h3 class="panel-title">DESTINOS FRECUENTES</h3>
-                <ul class="stop-list">
-                    <li onclick="irADestino(-18.4886, -70.2968, 'Universidad de Tarapacá')">
-                        <span class="stop-name">UTA</span><span class="dot dot-red"></span>
-                    </li>
-                    <li onclick="irADestino(-18.4815, -70.3134, 'Santo Tomás')">
-                        <span class="stop-name">SANTO TOMÁS</span><span class="dot dot-magenta"></span>
-                    </li>
-                    <li onclick="irADestino(-18.4764, -70.3106, 'Hospital Regional')">
-                        <span class="stop-name">HOSP. REGIONAL</span><span class="dot dot-blue"></span>
-                    </li>
-                    <li onclick="irADestino(-18.4735, -70.3080, 'Hospital San José')">
-                        <span class="stop-name">HOSP. SAN JOSÉ</span><span class="dot dot-orange"></span>
-                    </li>
-                    <li onclick="irADestino(-18.4744, -70.3115, 'Mall Plaza')">
-                        <span class="stop-name">MALL PLAZA</span><span class="dot dot-green"></span>
-                    </li>
-                    <li onclick="irADestino(-18.4985, -70.2905, 'El Agro')">
-                        <span class="stop-name">EL AGRO</span><span class="dot" style="background-color: #f1c40f;"></span>
-                    </li>
-                </ul>
+        <div class="sidebar-content" id="sidebar-lineas-content">
             </div>
+        <div class="sidebar-content hidden" id="sidebar-favs-content">
+            <p style="text-align: center; color: #888; margin-top: 20px;">Tus paraderos guardados aparecerán aquí.</p>
+        </div>
+    </div>
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleMenu()"></div>
+    <div id="map"></div>
 
-            <div id="tab-lineas" class="tab-content">
-                <div id="lines-container">
-                    <p style="text-align: center; color: #888; font-size: 14px;">Cargando rutas...</p>
-                </div>
+    <button onclick="centrarEnUsuario()" class="btn-locate hidden-ui" title="Mi ubicación">🎯</button>
+
+    <div id="bottom-sheet" class="bottom-sheet hidden">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+            <button id="btn-star-paradero" class="icon-btn star-btn" onclick="toggleParaderoFavorito()">☆</button>
+            <div class="title-container">
+                <h3 id="sheet-title">Selecciona un paradero</h3>
+                <p id="sheet-subtitle">Toca un autito en el mapa</p>
             </div>
+            <button class="close-sheet-btn" onclick="cerrarBottomSheet()">✕</button>
+        </div>
+        
+        <div class="sheet-body">
+            <p class="section-label">Líneas y destinos desde aquí:</p>
+            <div id="sheet-lines" class="destination-list-container">
+                </div>
         </div>
     </div>
 
